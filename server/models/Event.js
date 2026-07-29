@@ -21,9 +21,14 @@ const eventSchema = new mongoose.Schema(
       public_id: { type: String, default: '' },
     },
     organizer: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    status: { type: String, enum: ['draft', 'published'], default: 'published' },
     registrationClosed: { type: Boolean, default: false },
     isApproved: { type: Boolean, default: true },
+    isFeatured: { type: Boolean, default: false },
+    viewsCount: { type: Number, default: 0 },
     bookingsCount: { type: Number, default: 0 },
+    averageRating: { type: Number, default: 0, min: 0, max: 5 },
+    reviewsCount: { type: Number, default: 0 },
   },
   { timestamps: true }
 );

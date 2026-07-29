@@ -14,6 +14,7 @@ const categoryColors = {
 const EventCard = ({ event }) => {
   const date = new Date(event.date);
   const soldOut = event.availableSeats <= 0;
+  const hasReviews = event.reviewsCount > 0;
 
   return (
     <Link
@@ -50,7 +51,9 @@ const EventCard = ({ event }) => {
         <p className="text-sm text-slate-500 mt-1 line-clamp-1">{event.venue}, {event.city}</p>
         <div className="flex items-center justify-between mt-3">
           <span className="font-semibold">{event.ticketPrice === 0 ? 'Free' : `₹${event.ticketPrice}`}</span>
-          <span className="text-xs text-slate-500">{event.availableSeats} seats left</span>
+          <span className="text-xs text-slate-500">
+            {hasReviews ? `★ ${event.averageRating} (${event.reviewsCount})` : `${event.availableSeats} seats left`}
+          </span>
         </div>
       </div>
     </Link>

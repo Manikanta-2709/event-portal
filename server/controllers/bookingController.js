@@ -43,6 +43,7 @@ exports.createBooking = async (req, res, next) => {
           <p>Hi ${req.user.name}, your booking for <strong>${event.title}</strong> is confirmed.</p>
           <ul>
             <li><strong>Booking ID:</strong> ${booking._id}</li>
+            <li><strong>Ticket code:</strong> ${booking.ticketCode}</li>
             <li><strong>Date:</strong> ${new Date(event.date).toLocaleDateString()} at ${event.time}</li>
             <li><strong>Venue:</strong> ${event.venue}, ${event.city}</li>
             <li><strong>Tickets:</strong> ${numberOfTickets}</li>

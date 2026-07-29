@@ -10,6 +10,7 @@ const {
   getMyEvents,
   getEventAttendees,
   getOrganizerRevenue,
+  createOrUpdateReview,
 } = require('../controllers/eventController');
 const protect = require('../middleware/auth');
 const authorize = require('../middleware/role');
@@ -37,6 +38,16 @@ router.get('/organizer/revenue', protect, authorize('organizer', 'admin'), getOr
 
 router.get('/', getEvents);
 router.get('/:id', getEventById);
+router.post(
+  '/:id/reviews',
+  protect,
+  [
+    body('rating').isInt({ min: 1, max: 5 }).withMessage('Rating must be between 1 and 5'),
+    body('comment').optional({ checkFalsy: true }).trim().isLength({ max: 600 }).withMessage('Review is too long'),
+  ],
+  validate,
+  createOrUpdateReview
+);
 
 router.post(
   '/',

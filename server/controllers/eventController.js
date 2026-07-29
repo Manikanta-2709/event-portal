@@ -1,6 +1,19 @@
 const Event = require('../models/Event');
 const Booking = require('../models/Booking');
+const Review = require('../models/Review');
 const { uploadBuffer, destroy } = require('../utils/cloudinaryUpload');
+
+const refreshEventRating = async (eventId) => {
+  const [stats] = await Review.aggregate([
+    { $match: { event: eventId } },
+    { $group: { _id: '$event', averageRating: { $avg: '$rating' }, reviewsCount: { $sum: 1 } } },
+  ]);
+
+  await Event.findByIdAndUpdate(eventId, {
+    averageRating: stats ? Number(stats.averageRating.toFixed(1)) : 0,
+    reviewsCount: stats?.reviewsCount || 0,
+  });
+};
 
 // @route GET /api/events
 // supports search, filter (category, date, city, price range), sort, pagination
@@ -62,7 +75,13 @@ exports.getEventById = async (req, res, next) => {
   try {
     const event = await Event.findById(req.params.id).populate('organizer', 'name email phone');
     if (!event) return res.status(404).json({ success: false, message: 'Event not found' });
-    res.json({ success: true, event });
+
+    const reviews = await Review.find({ event: event._id })
+      .populate('user', 'name avatar')
+      .sort({ updatedAt: -1 })
+      .limit(20);
+
+    res.json({ success: true, event, reviews });
   } catch (err) {
     next(err);
   }
@@ -146,9 +165,47 @@ exports.deleteEvent = async (req, res, next) => {
 
     if (event.banner.public_id) await destroy(event.banner.public_id);
     await Booking.deleteMany({ event: event._id });
+    await Review.deleteMany({ event: event._id });
     await event.deleteOne();
 
     res.json({ success: true, message: 'Event deleted' });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @route POST /api/events/:id/reviews
+exports.createOrUpdateReview = async (req, res, next) => {
+  try {
+    const event = await Event.findById(req.params.id);
+    if (!event) return res.status(404).json({ success: false, message: 'Event not found' });
+
+    const booking = await Booking.findOne({
+      event: event._id,
+      user: req.user._id,
+      bookingStatus: 'confirmed',
+    });
+
+    if (!booking) {
+      return res.status(403).json({
+        success: false,
+        message: 'Only confirmed attendees can review this event',
+      });
+    }
+
+    const review = await Review.findOneAndUpdate(
+      { event: event._id, user: req.user._id },
+      {
+        rating: Number(req.body.rating),
+        comment: req.body.comment || '',
+      },
+      { upsert: true, new: true, runValidators: true, setDefaultsOnInsert: true }
+    ).populate('user', 'name avatar');
+
+    await refreshEventRating(event._id);
+    const updatedEvent = await Event.findById(event._id).populate('organizer', 'name email phone');
+
+    res.status(201).json({ success: true, event: updatedEvent, review });
   } catch (err) {
     next(err);
   }

@@ -60,13 +60,13 @@ npm run dev             # http://localhost:5173, proxies /api to :5000
 
 | Role       | Can do |
 |------------|--------|
-| User       | browse/search/filter events, book & cancel tickets, download confirmation, favorites, edit profile |
+| User       | browse/search/filter events, book & cancel tickets, download ticket confirmation, favorites, reviews, edit profile |
 | Organizer  | everything a User can, plus create/edit/delete own events after approval, view attendees & revenue, close registration |
 | Admin      | manage users (block/unblock), approve organizers, remove any event, view platform-wide stats |
 
 New organizer signups start with `isApproved: false` and need admin approval
 before they can create, edit, delete, or close registrations for events.
-Bookings also send confirmation emails when SMTP settings are configured.
+Bookings include unique ticket codes and send confirmation emails when SMTP settings are configured.
 
 ## API overview
 
@@ -77,7 +77,8 @@ Auth: `POST /api/auth/register|login|logout`, `GET /api/auth/me`,
 Events: `GET /api/events` (search/filter/sort/paginate via query params),
 `GET /api/events/:id`, `POST|PUT|DELETE /api/events/:id` (organizer/admin),
 `GET /api/events/organizer/mine`, `GET /api/events/organizer/revenue`,
-`GET /api/events/:id/attendees`, `PUT /api/events/:id/close-registration`
+`GET /api/events/:id/attendees`, `PUT /api/events/:id/close-registration`,
+`POST /api/events/:id/reviews`
 
 Bookings: `POST /api/bookings`, `GET /api/bookings`, `GET/DELETE /api/bookings/:id`
 

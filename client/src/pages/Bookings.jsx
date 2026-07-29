@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import api from '../api/axios';
 
@@ -10,6 +10,8 @@ const statusColor = {
 const Bookings = () => {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const ticketCodeFor = (booking) => booking.ticketCode || `EVT-${booking._id.slice(-8).toUpperCase()}`;
 
   const fetchBookings = () => {
     setLoading(true);
@@ -33,11 +35,12 @@ const Bookings = () => {
     const content = `EVENTRA - BOOKING CONFIRMATION
 --------------------------------
 Booking ID: ${b._id}
+Ticket Code: ${ticketCodeFor(b)}
 Event: ${b.event?.title}
 Venue: ${b.event?.venue}, ${b.event?.city}
 Date: ${new Date(b.event?.date).toLocaleDateString()} at ${b.event?.time}
 Tickets: ${b.numberOfTickets}
-Total Paid: ₹${b.totalPrice}
+Total Paid: â‚¹${b.totalPrice}
 Status: ${b.bookingStatus}
 `;
     const blob = new Blob([content], { type: 'text/plain' });
@@ -64,9 +67,12 @@ Status: ${b.bookingStatus}
               <div>
                 <h3 className="font-semibold">{b.event?.title || 'Event removed'}</h3>
                 <p className="text-sm text-slate-500">
-                  {b.event && `${new Date(b.event.date).toLocaleDateString()} · ${b.event.venue}, ${b.event.city}`}
+                  {b.event && `${new Date(b.event.date).toLocaleDateString()} Â· ${b.event.venue}, ${b.event.city}`}
                 </p>
-                <p className="text-sm text-slate-500">{b.numberOfTickets} ticket(s) · ₹{b.totalPrice}</p>
+                <p className="text-sm text-slate-500">{b.numberOfTickets} ticket(s) Â· â‚¹{b.totalPrice}</p>
+                <p className="mt-2 inline-flex rounded-full bg-primary-50 px-3 py-1 text-xs font-semibold text-primary-700 dark:bg-primary-900/30 dark:text-primary-300">
+                  Ticket Code: {ticketCodeFor(b)}
+                </p>
               </div>
               <div className="flex items-center gap-3">
                 <span className={`text-xs font-semibold px-2 py-1 rounded-full capitalize ${statusColor[b.bookingStatus]}`}>

@@ -13,12 +13,18 @@ const EventDetails = () => {
   const [tickets, setTickets] = useState(1);
   const [booking, setBooking] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [reviews, setReviews] = useState([]);
+  const [reviewForm, setReviewForm] = useState({ rating: 5, comment: '' });
+  const [submittingReview, setSubmittingReview] = useState(false);
 
   const fetchEvent = () => {
     setLoading(true);
     api
       .get(`/events/${id}`)
-      .then((res) => setEvent(res.data.event))
+      .then((res) => {
+        setEvent(res.data.event);
+        setReviews(res.data.reviews || []);
+      })
       .catch(() => toast.error('Event not found'))
       .finally(() => setLoading(false));
   };
@@ -57,11 +63,31 @@ const EventDetails = () => {
     setIsFavorite(res.data.favorites.some((f) => f === id || f._id === id));
   };
 
+  const handleReviewSubmit = async (e) => {
+    e.preventDefault();
+    if (!user) return navigate('/login');
+    setSubmittingReview(true);
+    try {
+      const res = await api.post(`/events/${id}/reviews`, reviewForm);
+      setEvent(res.data.event);
+      toast.success('Thanks for your review!');
+      setReviewForm({ rating: 5, comment: '' });
+      fetchEvent();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Review failed');
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
+
   if (loading) return <div className="max-w-5xl mx-auto px-6 py-16 text-center">Loading...</div>;
   if (!event) return <div className="max-w-5xl mx-auto px-6 py-16 text-center">Event not found.</div>;
 
   const soldOut = event.availableSeats <= 0;
   const past = new Date(event.date) < new Date();
+  const ratingSummary = event.reviewsCount > 0
+    ? `★ ${event.averageRating} from ${event.reviewsCount} review${event.reviewsCount === 1 ? '' : 's'}`
+    : 'No reviews yet';
 
   return (
     <div className="max-w-5xl mx-auto px-6 py-10">
@@ -73,6 +99,7 @@ const EventDetails = () => {
         <div className="md:col-span-2">
           <span className="text-xs font-semibold uppercase text-primary-600">{event.category}</span>
           <h1 className="text-3xl font-bold mt-1 mb-4">{event.title}</h1>
+          <p className="mb-4 text-sm font-semibold text-amber-500">{ratingSummary}</p>
           <p className="text-slate-600 dark:text-slate-300 whitespace-pre-line">{event.description}</p>
 
           <div className="grid sm:grid-cols-2 gap-4 mt-8 text-sm">
@@ -120,6 +147,56 @@ const EventDetails = () => {
             {isFavorite ? '♥ Saved' : '♡ Save to favorites'}
           </button>
         </div>
+      </div>
+
+      <div className="mt-12 grid md:grid-cols-3 gap-8">
+        <div className="md:col-span-2">
+          <h2 className="text-2xl font-bold mb-4">Customer Reviews</h2>
+          {reviews.length === 0 ? (
+            <p className="text-slate-500">No reviews yet. Book the event and be the first to share feedback.</p>
+          ) : (
+            <div className="space-y-4">
+              {reviews.map((review) => (
+                <div key={review._id} className="rounded-2xl border border-slate-200 p-4 dark:border-slate-800">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="font-semibold">{review.user?.name || 'Attendee'}</p>
+                    <span className="text-sm font-semibold text-amber-500">★ {review.rating}</span>
+                  </div>
+                  {review.comment && <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">{review.comment}</p>}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <form onSubmit={handleReviewSubmit} className="rounded-2xl border border-slate-200 p-5 dark:border-slate-800 h-fit">
+          <h3 className="font-bold mb-3">Add your review</h3>
+          <p className="text-sm text-slate-500 mb-4">Only confirmed attendees can post reviews.</p>
+          <label className="text-sm text-slate-500 block mb-1">Rating</label>
+          <select
+            value={reviewForm.rating}
+            onChange={(e) => setReviewForm({ ...reviewForm, rating: Number(e.target.value) })}
+            className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-transparent mb-4"
+          >
+            {[5, 4, 3, 2, 1].map((rating) => (
+              <option key={rating} value={rating}>{rating} star{rating === 1 ? '' : 's'}</option>
+            ))}
+          </select>
+          <textarea
+            value={reviewForm.comment}
+            onChange={(e) => setReviewForm({ ...reviewForm, comment: e.target.value })}
+            maxLength={600}
+            rows={4}
+            placeholder="What did you like about this event?"
+            className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-transparent mb-4"
+          />
+          <button
+            disabled={submittingReview}
+            className="w-full py-2.5 rounded-lg bg-primary-600 text-white font-medium hover:bg-primary-700 disabled:opacity-60"
+          >
+            {submittingReview ? 'Submitting...' : 'Submit Review'}
+          </button>
+        </form>
       </div>
     </div>
   );

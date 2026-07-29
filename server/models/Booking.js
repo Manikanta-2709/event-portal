@@ -1,4 +1,7 @@
+const crypto = require('crypto');
 const mongoose = require('mongoose');
+
+const generateTicketCode = () => `EVT-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
 
 const bookingSchema = new mongoose.Schema(
   {
@@ -6,6 +9,12 @@ const bookingSchema = new mongoose.Schema(
     event: { type: mongoose.Schema.Types.ObjectId, ref: 'Event', required: true },
     numberOfTickets: { type: Number, required: true, min: 1 },
     totalPrice: { type: Number, required: true },
+    ticketCode: {
+      type: String,
+      unique: true,
+      sparse: true,
+      default: generateTicketCode,
+    },
     bookingStatus: {
       type: String,
       enum: ['confirmed', 'cancelled'],
@@ -20,5 +29,10 @@ const bookingSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+bookingSchema.pre('validate', function (next) {
+  if (!this.ticketCode) this.ticketCode = generateTicketCode();
+  next();
+});
 
 module.exports = mongoose.model('Booking', bookingSchema);
