@@ -8,16 +8,19 @@ const categories = ['Music', 'Tech', 'Sports', 'Business', 'Arts', 'Food', 'Educ
 
 const Landing = () => {
   const [featured, setFeatured] = useState([]);
+  const [trending, setTrending] = useState([]);
   const [upcoming, setUpcoming] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     Promise.all([
-      api.get('/events?sortBy=popularity&order=desc&limit=4'),
+      api.get('/events?featured=true&limit=4'),
+      api.get('/events?sortBy=trending&order=desc&limit=4'),
       api.get('/events?sortBy=date&order=asc&limit=4'),
     ])
-      .then(([featRes, upRes]) => {
+      .then(([featRes, trendRes, upRes]) => {
         setFeatured(featRes.data.events);
+        setTrending(trendRes.data.events);
         setUpcoming(upRes.data.events);
       })
       .finally(() => setLoading(false));
@@ -84,6 +87,15 @@ const Landing = () => {
           {loading
             ? Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)
             : featured.map((ev) => <EventCard key={ev._id} event={ev} />)}
+        </div>
+      </section>
+
+      <section className="max-w-7xl mx-auto px-6 py-10">
+        <h2 className="text-2xl font-bold mb-6">Trending Events</h2>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {loading
+            ? Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)
+            : trending.map((ev) => <EventCard key={ev._id} event={ev} />)}
         </div>
       </section>
 

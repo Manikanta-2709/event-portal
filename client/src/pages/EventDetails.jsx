@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { Html5QrcodeScanner } from 'html5-qrcode';
 import { toast } from 'react-toastify';
 import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
@@ -16,6 +17,10 @@ const EventDetails = () => {
   const [reviews, setReviews] = useState([]);
   const [reviewForm, setReviewForm] = useState({ rating: 5, comment: '' });
   const [submittingReview, setSubmittingReview] = useState(false);
+  const [couponCode, setCouponCode] = useState('');
+  const [paymentMode, setPaymentMode] = useState('demo');
+  const [scannerOpen, setScannerOpen] = useState(false);
+  const [scannerMessage, setScannerMessage] = useState('');
 
   const fetchEvent = () => {
     setLoading(true);
@@ -42,11 +47,34 @@ const EventDetails = () => {
     }
   }, [user, id]);
 
+  useEffect(() => {
+    if (!scannerOpen) return;
+    const scanner = new Html5QrcodeScanner('qr-reader', { fps: 10, qrbox: 250 }, false);
+    scanner.render(async (decodedText) => {
+      try {
+        const res = await api.post('/bookings/check-in', { ticketCode: decodedText });
+        setScannerMessage(res.data.message || 'Check-in successful');
+        scanner.clear();
+        setScannerOpen(false);
+      } catch (error) {
+        setScannerMessage(error.response?.data?.message || 'Scan failed');
+      }
+    });
+
+    return () => scanner.clear().catch(() => {});
+  }, [scannerOpen]);
+
   const handleBook = async () => {
     if (!user) return navigate('/login');
     setBooking(true);
     try {
-      await api.post('/bookings', { eventId: id, numberOfTickets: tickets });
+      const payload = { eventId: id, numberOfTickets: tickets, couponCode, paymentProvider: paymentMode };
+      if (paymentMode === 'stripe') {
+        const paymentRes = await api.post('/payments/create-session', { eventTitle: event.title, amount: event.ticketPrice * tickets });
+        window.location.href = paymentRes.data.url;
+        return;
+      }
+      await api.post('/bookings', payload);
       toast.success('Booking confirmed!');
       fetchEvent();
       navigate('/bookings');
@@ -130,6 +158,22 @@ const EventDetails = () => {
                 onChange={(e) => setTickets(Math.max(1, Math.min(event.availableSeats, Number(e.target.value))))}
                 className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-transparent mb-4"
               />
+              <label className="text-sm text-slate-500 block mb-1">Coupon code</label>
+              <input
+                value={couponCode}
+                onChange={(e) => setCouponCode(e.target.value)}
+                placeholder="Optional"
+                className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-transparent mb-3"
+              />
+              <label className="text-sm text-slate-500 block mb-1">Payment method</label>
+              <select
+                value={paymentMode}
+                onChange={(e) => setPaymentMode(e.target.value)}
+                className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-transparent mb-4"
+              >
+                <option value="demo">Demo</option>
+                <option value="stripe">Stripe</option>
+              </select>
               <button
                 onClick={handleBook}
                 disabled={booking}
@@ -141,6 +185,22 @@ const EventDetails = () => {
           )}
 
           <button
+            onClick={() => {
+              navigator.share?.({ title: event.title, text: `Join ${event.title}`, url: window.location.href });
+            }}
+            className="w-full py-2.5 mt-3 rounded-lg border border-slate-300 dark:border-slate-700 font-medium hover:bg-slate-100 dark:hover:bg-slate-800"
+          >
+            Share event
+          </button>
+          {(user?.role === 'organizer' || user?.role === 'admin') && (
+            <button
+              onClick={() => setScannerOpen(true)}
+              className="w-full py-2.5 mt-3 rounded-lg border border-slate-300 dark:border-slate-700 font-medium hover:bg-slate-100 dark:hover:bg-slate-800"
+            >
+              Scan ticket QR
+            </button>
+          )}
+          <button
             onClick={toggleFavorite}
             className="w-full py-2.5 mt-3 rounded-lg border border-slate-300 dark:border-slate-700 font-medium hover:bg-slate-100 dark:hover:bg-slate-800"
           >
@@ -148,6 +208,17 @@ const EventDetails = () => {
           </button>
         </div>
       </div>
+
+      {scannerOpen && (
+        <div className="mt-8 rounded-2xl border border-slate-200 p-5 dark:border-slate-800">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-xl font-semibold">Check-in scanner</h2>
+            <button onClick={() => setScannerOpen(false)} className="text-sm text-primary-600">Close</button>
+          </div>
+          <div id="qr-reader" className="w-full max-w-md mx-auto" />
+          {scannerMessage && <p className="mt-3 text-sm text-emerald-600">{scannerMessage}</p>}
+        </div>
+      )}
 
       <div className="mt-12 grid md:grid-cols-3 gap-8">
         <div className="md:col-span-2">

@@ -18,6 +18,9 @@ const Events = () => {
     category: searchParams.get('category') || '',
     city: searchParams.get('city') || '',
     date: searchParams.get('date') || '',
+    dateFrom: searchParams.get('dateFrom') || '',
+    dateTo: searchParams.get('dateTo') || '',
+    type: searchParams.get('type') || '',
     minPrice: searchParams.get('minPrice') || '',
     maxPrice: searchParams.get('maxPrice') || '',
     sortBy: searchParams.get('sortBy') || 'date',
@@ -85,6 +88,27 @@ const Events = () => {
           onChange={(e) => setFilters({ ...filters, date: e.target.value })}
           className="px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-transparent"
         />
+        <input
+          type="date"
+          value={filters.dateFrom}
+          onChange={(e) => setFilters({ ...filters, dateFrom: e.target.value, date: '' })}
+          className="px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-transparent"
+        />
+        <input
+          type="date"
+          value={filters.dateTo}
+          onChange={(e) => setFilters({ ...filters, dateTo: e.target.value })}
+          className="px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-transparent"
+        />
+        <select
+          value={filters.type}
+          onChange={(e) => setFilters({ ...filters, type: e.target.value })}
+          className="px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-transparent"
+        >
+          <option value="">All ticket types</option>
+          <option value="free">Free</option>
+          <option value="paid">Paid</option>
+        </select>
         <select
           value={`${filters.sortBy}-${filters.order}`}
           onChange={(e) => {

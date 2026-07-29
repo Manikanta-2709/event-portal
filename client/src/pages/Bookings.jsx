@@ -2,6 +2,8 @@
 import { toast } from 'react-toastify';
 import api from '../api/axios';
 
+const qrSize = 120;
+
 const statusColor = {
   confirmed: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
   cancelled: 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300',
@@ -67,12 +69,17 @@ Status: ${b.bookingStatus}
               <div>
                 <h3 className="font-semibold">{b.event?.title || 'Event removed'}</h3>
                 <p className="text-sm text-slate-500">
-                  {b.event && `${new Date(b.event.date).toLocaleDateString()} Â· ${b.event.venue}, ${b.event.city}`}
+                  {b.event && `${new Date(b.event.date).toLocaleDateString()} · ${b.event.venue}, ${b.event.city}`}
                 </p>
-                <p className="text-sm text-slate-500">{b.numberOfTickets} ticket(s) Â· â‚¹{b.totalPrice}</p>
+                <p className="text-sm text-slate-500">{b.numberOfTickets} ticket(s) · ₹{b.totalPrice}</p>
                 <p className="mt-2 inline-flex rounded-full bg-primary-50 px-3 py-1 text-xs font-semibold text-primary-700 dark:bg-primary-900/30 dark:text-primary-300">
                   Ticket Code: {ticketCodeFor(b)}
                 </p>
+                {b.qrCodeData && (
+                  <div className="mt-3 rounded-xl border border-slate-200 p-3 dark:border-slate-800">
+                    <img src={b.qrCodeData} alt="Ticket QR" width={qrSize} height={qrSize} />
+                  </div>
+                )}
               </div>
               <div className="flex items-center gap-3">
                 <span className={`text-xs font-semibold px-2 py-1 rounded-full capitalize ${statusColor[b.bookingStatus]}`}>

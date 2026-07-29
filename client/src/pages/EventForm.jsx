@@ -8,7 +8,7 @@ const categories = ['Music', 'Tech', 'Sports', 'Business', 'Arts', 'Food', 'Educ
 
 const emptyForm = {
   title: '', description: '', category: 'Music', venue: '', city: '',
-  date: '', time: '', ticketPrice: 0, maxSeats: 50,
+  date: '', time: '', ticketPrice: 0, maxSeats: 50, status: 'published',
 };
 
 // used for both Create Event and Edit Event, driven by presence of :id
@@ -35,6 +35,7 @@ const EventForm = () => {
           time: ev.time,
           ticketPrice: ev.ticketPrice,
           maxSeats: ev.maxSeats,
+          status: ev.status || 'published',
         });
       });
     }
@@ -129,6 +130,17 @@ const EventForm = () => {
             onChange={(e) => setForm({ ...form, maxSeats: e.target.value })}
             className="px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-transparent"
           />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <label className="text-sm text-slate-500 block mb-1">Publish status</label>
+          <select
+            value={form.status}
+            onChange={(e) => setForm({ ...form, status: e.target.value })}
+            className="px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-transparent"
+          >
+            <option value="draft">Draft</option>
+            <option value="published">Published</option>
+          </select>
         </div>
         <div>
           <label className="text-sm text-slate-500 block mb-1">Event banner</label>

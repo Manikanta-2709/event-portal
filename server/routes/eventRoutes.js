@@ -9,8 +9,12 @@ const {
   closeRegistration,
   getMyEvents,
   getEventAttendees,
+  exportEventAttendees,
   getOrganizerRevenue,
   createOrUpdateReview,
+  duplicateEvent,
+  publishEvent,
+  getOrganizerProfile,
 } = require('../controllers/eventController');
 const protect = require('../middleware/auth');
 const authorize = require('../middleware/role');
@@ -35,6 +39,7 @@ const eventValidation = [
 // organizer-specific routes must be defined before the /:id catch-all
 router.get('/organizer/mine', protect, authorize('organizer', 'admin'), getMyEvents);
 router.get('/organizer/revenue', protect, authorize('organizer', 'admin'), getOrganizerRevenue);
+router.get('/organizers/:organizerId', getOrganizerProfile);
 
 router.get('/', getEvents);
 router.get('/:id', getEventById);
@@ -76,6 +81,9 @@ router.put(
   requireApprovedOrganizer,
   closeRegistration
 );
+router.post('/:id/duplicate', protect, authorize('organizer', 'admin'), requireApprovedOrganizer, duplicateEvent);
+router.put('/:id/publish', protect, authorize('organizer', 'admin'), requireApprovedOrganizer, publishEvent);
+router.get('/:id/attendees/export', protect, authorize('organizer', 'admin'), exportEventAttendees);
 router.get('/:id/attendees', protect, authorize('organizer', 'admin'), getEventAttendees);
 
 module.exports = router;

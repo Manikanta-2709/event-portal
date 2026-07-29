@@ -1,0 +1,7 @@
+{
+  "name": "event-portal",
+  "private": true,
+  "scripts": {
+    "seed:events": "npm --prefix server run seed:events"
+  }
+}

@@ -46,6 +46,31 @@ const OrganizerDashboard = () => {
     }
   };
 
+  const handleDuplicate = async (id) => {
+    try {
+      const res = await api.post(`/events/${id}/duplicate`);
+      toast.success('Event duplicated as draft');
+      if (res.data.event?._id) window.location.href = `/events/${res.data.event._id}/edit`;
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Duplicate failed');
+    }
+  };
+
+  const handleExport = async (id) => {
+    try {
+      const res = await api.get(`/events/${id}/attendees/export`, { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `attendees-${id}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Export failed');
+    }
+  };
+
   return (
     <div className="max-w-6xl mx-auto px-6 py-10">
       <div className="flex items-center justify-between mb-8">
@@ -103,6 +128,8 @@ const OrganizerDashboard = () => {
               <Link to={`/events/${ev._id}`} className="text-sm px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700">View</Link>
               <Link to={`/events/${ev._id}/edit`} className="text-sm px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700">Edit</Link>
               <Link to={`/events/${ev._id}/attendees`} className="text-sm px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700">Attendees</Link>
+              <button onClick={() => handleExport(ev._id)} className="text-sm px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700">Export</button>
+              <button onClick={() => handleDuplicate(ev._id)} className="text-sm px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700">Duplicate</button>
               {!ev.registrationClosed && (
                 <button onClick={() => handleClose(ev._id)} className="text-sm px-3 py-1.5 rounded-lg border border-amber-400 text-amber-600">Close Reg.</button>
               )}
