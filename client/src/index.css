@@ -1,0 +1,36 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply font-body bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 transition-colors;
+}
+
+h1, h2, h3, h4 {
+  @apply font-display;
+}
+
+/* ticket-stub card signature: a perforated notch cut into a card, evoking a torn ticket */
+.ticket-card {
+  position: relative;
+  clip-path: polygon(
+    0 0, 100% 0, 100% 100%, 0 100%
+  );
+}
+
+.ticket-notch {
+  position: absolute;
+  top: 50%;
+  width: 20px;
+  height: 20px;
+  background: inherit;
+  border-radius: 50%;
+}
+
+.skeleton {
+  @apply animate-pulse bg-slate-200 dark:bg-slate-800 rounded;
+}
