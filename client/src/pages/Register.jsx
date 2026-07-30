@@ -13,9 +13,13 @@ const Register = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      await register(form);
+      const newUser = await register(form);
       toast.success('Account created!');
-      navigate('/');
+      const dashboardPath = {
+        organizer: '/dashboard/organizer',
+        user: '/dashboard/user',
+      };
+      navigate(dashboardPath[newUser.role] || '/');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Registration failed');
     } finally {

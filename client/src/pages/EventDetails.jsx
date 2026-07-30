@@ -52,7 +52,10 @@ const EventDetails = () => {
     const scanner = new Html5QrcodeScanner('qr-reader', { fps: 10, qrbox: 250 }, false);
     scanner.render(async (decodedText) => {
       try {
-        const res = await api.post('/bookings/check-in', { ticketCode: decodedText });
+        // QR encodes "EVENTRA|ticketCode|title" — extract the ticket code
+        const parts = decodedText.split('|');
+        const ticketCode = parts.length >= 2 ? parts[1] : decodedText;
+        const res = await api.post('/bookings/check-in', { ticketCode });
         setScannerMessage(res.data.message || 'Check-in successful');
         scanner.clear();
         setScannerOpen(false);

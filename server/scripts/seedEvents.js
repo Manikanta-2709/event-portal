@@ -21,6 +21,14 @@ const sampleOrganizer = {
   role: 'organizer',
 };
 
+const sampleAdmin = {
+  name: 'Eventra Admin',
+  email: 'admin@eventra.local',
+  password: 'AdminPass123',
+  phone: '8888888888',
+  role: 'admin',
+};
+
 const sampleEvents = [
   {
     title: 'Neon Nights Music Fest',
@@ -158,6 +166,74 @@ const sampleEvents = [
       public_id: '',
     },
   },
+  {
+    title: 'Fintech Disruption Panel',
+    description:
+      'Top fintech founders and regulatory experts discuss the future of digital payments, crypto regulations, and financial inclusion.',
+    category: 'Business',
+    venue: 'Grand Hyatt Convention Center',
+    city: 'Mumbai',
+    date: daysFromNow(15),
+    time: '14:00',
+    ticketPrice: 1200,
+    maxSeats: 150,
+    availableSeats: 150,
+    banner: {
+      url: 'https://images.unsplash.com/photo-1556761175-5972d50c28b5?auto=format&fit=crop&w=1200&q=80',
+      public_id: '',
+    },
+  },
+  {
+    title: 'Acoustic Soul Night',
+    description:
+      'Unplugged acoustic performances by upcoming local artists. Grab a coffee, sit back, and enjoy soul-soothing music.',
+    category: 'Music',
+    venue: 'The Roastery Coffee House',
+    city: 'Bengaluru',
+    date: daysFromNow(5),
+    time: '20:00',
+    ticketPrice: 350,
+    maxSeats: 50,
+    availableSeats: 50,
+    banner: {
+      url: 'https://images.unsplash.com/photo-1516280440502-86113b2ce213?auto=format&fit=crop&w=1200&q=80',
+      public_id: '',
+    },
+  },
+  {
+    title: 'Cloud Computing Conference',
+    description:
+      'Annual tech conference exploring AWS, Azure, GCP, Kubernetes, and the latest trends in serverless architecture.',
+    category: 'Tech',
+    venue: 'Hitex Exhibition Center',
+    city: 'Hyderabad',
+    date: daysFromNow(40),
+    time: '09:00',
+    ticketPrice: 2000,
+    maxSeats: 500,
+    availableSeats: 500,
+    banner: {
+      url: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80',
+      public_id: '',
+    },
+  },
+  {
+    title: 'Photography Walk: Old City',
+    description:
+      'Guided photography walk capturing the heritage architecture, bustling markets, and timeless culture of the old city.',
+    category: 'Arts',
+    venue: 'Charminar (Meeting Point)',
+    city: 'Hyderabad',
+    date: daysFromNow(8),
+    time: '06:30',
+    ticketPrice: 200,
+    maxSeats: 25,
+    availableSeats: 25,
+    banner: {
+      url: 'https://images.unsplash.com/photo-1511216335778-7cb8f49fa7a3?auto=format&fit=crop&w=1200&q=80',
+      public_id: '',
+    },
+  }
 ];
 
 const ensureOrganizer = async () => {
@@ -167,11 +243,30 @@ const ensureOrganizer = async () => {
     organizer = await User.create(sampleOrganizer);
   }
 
-  organizer.isApproved = true;
-  organizer.isBlocked = false;
-  await organizer.save();
+  // Use findByIdAndUpdate to avoid triggering the bcrypt pre-save hook
+  // which would re-hash the already-hashed password
+  await User.findByIdAndUpdate(organizer._id, {
+    isApproved: true,
+    isBlocked: false,
+  });
 
   return organizer;
+};
+
+const ensureAdmin = async () => {
+  let admin = await User.findOne({ email: sampleAdmin.email });
+
+  if (!admin) {
+    admin = await User.create(sampleAdmin);
+  }
+
+  // Use findByIdAndUpdate to avoid triggering the bcrypt pre-save hook
+  await User.findByIdAndUpdate(admin._id, {
+    isApproved: true,
+    isBlocked: false,
+  });
+
+  return admin;
 };
 
 const seedEvents = async () => {
@@ -182,12 +277,13 @@ const seedEvents = async () => {
   await mongoose.connect(process.env.MONGO_URI);
 
   const organizer = await ensureOrganizer();
+  await ensureAdmin();
 
   const results = await Promise.all(
     sampleEvents.map((event) =>
       Event.findOneAndUpdate(
         { title: event.title, organizer: organizer._id },
-        { $set: { ...event, organizer: organizer._id, isApproved: true, registrationClosed: false } },
+        { $set: { ...event, organizer: organizer._id, isApproved: true, registrationClosed: false, status: 'published' } },
         { upsert: true, new: true, setDefaultsOnInsert: true }
       )
     )
@@ -195,6 +291,7 @@ const seedEvents = async () => {
 
   console.log(`Seeded ${results.length} sample events.`);
   console.log(`Organizer login: ${sampleOrganizer.email} / ${sampleOrganizer.password}`);
+  console.log(`Admin login:     ${sampleAdmin.email} / ${sampleAdmin.password}`);
 };
 
 seedEvents()

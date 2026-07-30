@@ -35,7 +35,6 @@ function App() {
           <Route path="/reset-password/:token" element={<ResetPassword />} />
 
           <Route path="/events" element={<Events />} />
-          <Route path="/events/:id" element={<EventDetails />} />
           <Route
             path="/events/create"
             element={
@@ -44,6 +43,7 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route path="/events/:id" element={<EventDetails />} />
           <Route
             path="/events/:id/edit"
             element={

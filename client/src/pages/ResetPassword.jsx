@@ -2,10 +2,12 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import api from '../api/axios';
+import { useAuth } from '../context/AuthContext';
 
 const ResetPassword = () => {
   const { token } = useParams();
   const navigate = useNavigate();
+  const { setUser } = useAuth();
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -15,8 +17,11 @@ const ResetPassword = () => {
     try {
       const res = await api.put(`/auth/reset-password/${token}`, { password });
       localStorage.setItem('token', res.data.token);
-      toast.success('Password reset. Please log in again.');
-      navigate('/login');
+      // Fetch user profile so AuthContext is updated
+      const meRes = await api.get('/auth/me');
+      setUser(meRes.data.user);
+      toast.success('Password reset successful!');
+      navigate('/');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Reset failed');
     } finally {

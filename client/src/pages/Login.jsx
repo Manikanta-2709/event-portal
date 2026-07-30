@@ -13,9 +13,14 @@ const Login = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      await login(form.email, form.password);
+      const loggedInUser = await login(form.email, form.password);
       toast.success('Welcome back!');
-      navigate('/');
+      const dashboardPath = {
+        admin: '/dashboard/admin',
+        organizer: '/dashboard/organizer',
+        user: '/dashboard/user',
+      };
+      navigate(dashboardPath[loggedInUser.role] || '/');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Login failed');
     } finally {

@@ -1,6 +1,8 @@
 const User = require('../models/User');
 const Event = require('../models/Event');
 const Booking = require('../models/Booking');
+const Review = require('../models/Review');
+const { destroy } = require('../utils/cloudinaryUpload');
 
 // @route GET /api/admin/stats
 exports.getStats = async (req, res, next) => {
@@ -89,7 +91,9 @@ exports.removeEvent = async (req, res, next) => {
   try {
     const event = await Event.findById(req.params.id);
     if (!event) return res.status(404).json({ success: false, message: 'Event not found' });
+    if (event.banner?.public_id) await destroy(event.banner.public_id);
     await Booking.deleteMany({ event: event._id });
+    await Review.deleteMany({ event: event._id });
     await event.deleteOne();
     res.json({ success: true, message: 'Event removed' });
   } catch (err) {

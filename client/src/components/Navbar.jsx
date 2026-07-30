@@ -25,7 +25,12 @@ const Navbar = () => {
               Dashboard
             </Link>
           )}
-          {user?.role !== 'admin' && (
+          {user?.role === 'organizer' && (
+            <Link to="/events/create" className="hover:text-primary-600 dark:hover:text-primary-400">
+              Create Event
+            </Link>
+          )}
+          {user?.role === 'user' && (
             <Link to="/bookings" className="hover:text-primary-600 dark:hover:text-primary-400">
               My Bookings
             </Link>
